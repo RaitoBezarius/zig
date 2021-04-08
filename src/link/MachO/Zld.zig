@@ -2441,7 +2441,7 @@ fn writeDebugInfo(self: *Zld) !void {
     var stabs = std.ArrayList(macho.nlist_64).init(self.allocator);
     defer stabs.deinit();
 
-    for (self.objects.items) |object| {
+    for (self.objects.items) |object, object_id| {
         const tu_path = object.tu_path orelse continue;
         const tu_mtime = object.tu_mtime orelse continue;
         const dirname = std.fs.path.dirname(tu_path) orelse "./";
@@ -2472,6 +2472,7 @@ fn writeDebugInfo(self: *Zld) !void {
 
         for (object.stabs.items) |stab| {
             const sym = object.symtab.items[stab.symbol];
+
             switch (stab.tag) {
                 .function => {
                     try stabs.append(.{
@@ -2549,8 +2550,8 @@ fn populateStringTable(self: *Zld) !void {
     for (self.objects.items) |*object| {
         for (object.symtab.items) |*sym| {
             switch (sym.tag) {
-                .Stab, .Local => {},
-                else => continue,
+                .Undef, .Import => continue,
+                else => {},
             }
             const sym_name = object.getString(sym.inner.n_strx);
             const n_strx = try self.makeString(sym_name);
@@ -2559,6 +2560,8 @@ fn populateStringTable(self: *Zld) !void {
     }
 
     for (self.symtab.items()) |*entry| {
+        if (entry.value.tag != .Import) continue;
+
         const n_strx = try self.makeString(entry.key);
         entry.value.inner.n_strx = n_strx;
     }
