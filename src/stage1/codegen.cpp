@@ -9208,12 +9208,7 @@ static void init(CodeGen *g) {
     g->module = LLVMModuleCreateWithName(buf_ptr(g->root_out_name));
 
     LLVMSetTarget(g->module, buf_ptr(&g->llvm_triple_str));
-
-    if (target_object_format(g->zig_target) == ZigLLVM_COFF) {
-        ZigLLVMAddModuleCodeViewFlag(g->module);
-    } else {
-        ZigLLVMAddModuleDebugInfoFlag(g->module);
-    }
+    ZigLLVMAddModuleDebugInfoFlag(g->module);
 
     LLVMTargetRef target_ref;
     char *err_msg = nullptr;
